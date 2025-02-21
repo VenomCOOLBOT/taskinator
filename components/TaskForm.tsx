@@ -13,15 +13,16 @@ import {
 } from "./ui/form";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { createTask } from "@/app/actions";
+import { createTask, deleteAllTasks } from "@/actions/actions";
 
 const formSchema = z.object({
-  title: z.string().max(100, {
-    message: "Cannot exceed 100 characters!",
-  }),
+  title: z
+    .string()
+    .min(1, { message: "Task is required!" })
+    .max(100, { message: "Cannot exceed 100 characters!" }),
 });
 
-export default function AddTask() {
+export default function TaskForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,9 +34,15 @@ export default function AddTask() {
     await createTask(values);
     form.reset();
   }
+
+  async function handleRemoveAll() {
+      await deleteAllTasks();
+      form.reset();
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col justify-center">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="title"
@@ -45,12 +52,17 @@ export default function AddTask() {
               <FormControl>
                 <Input placeholder="Enter task here..." {...field} />
               </FormControl>
-              <FormDescription>This is task will be public.</FormDescription>
+              <FormDescription>This task will be public.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <div className="flex justify-center items-center space-x-4">
+          <Button type="submit">Submit</Button>
+          <Button type="button" variant="destructive" onClick={handleRemoveAll}>
+            Clear
+          </Button>
+        </div>
       </form>
     </Form>
   );
